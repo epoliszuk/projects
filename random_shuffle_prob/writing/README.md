@@ -1,6 +1,6 @@
 # Probability of Individual Items in a Randomly Shuffled List
 
-# Documents
+## Documents
 
 There are 3 documents explaining this problem.
 
@@ -8,10 +8,10 @@ There are 3 documents explaining this problem.
 * ``writing/abstract.tex``; A LaTeX file explaining the solution.
 * ``writing/abstract.pdf``; The compiled ``abstract.tex``.
 
-# Implementation
+## Implementation
 
-``implement.py`` contains the implementation of the solution. The solution function is ``random_shuffle_prob`` which takes a list of floats between 0 and 1 as input.
+``implement.py`` contains the implementation of the solution. The solution function is ``random_shuffle_prob`` which takes a list of floats between 0 and 1 as input. The brute force function is ``test``, takes the same input, and is considerably slower (O(n!), supposedly!).
 
-# Tests
+## Tests
 
-``test.py`` contains the tests used to test the function. It was created for use with [pytest](https://docs.pytest.org/en/stable/).
+``test.py`` contains the tests used to test the implementation. It was created for use with [pytest](https://docs.pytest.org/en/stable/).
