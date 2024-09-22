@@ -16,10 +16,9 @@ IterableT: TypeAlias = Iterable[T]
 
 class BasicFunctions(Enum):
     """Enum for basic functions."""
-    IDENTITY = lambda x: x
-    SQUARE = lambda x: x ** 2
-    CUBE = lambda x: x ** 3
-
+    IDENTITY = 1
+    SQUARE = 2
+    CUBE = 3
 
 ### Overloads ###
 
@@ -68,7 +67,11 @@ def sigma(upper: int, lower: int, f: BasicFunctions) -> float:
 
 
 def sigma(*args):
-    if len(args) >= 3 and args[2]:
+    if (
+        args[0].__class__ is int and
+        args[1].__class__ is int and
+        args[2].__class__ is BasicFunctions
+    ):
         upper, lower, f = args[:3]
         
         match f:
@@ -79,13 +82,23 @@ def sigma(*args):
             case BasicFunctions.CUBE:
                 return (upper ** 2 * (upper + 1) ** 2 - lower ** 2 * (lower - 1) ** 2) / 4
 
-    elif not len(args) and isinstance(args[0], int):
+    elif (
+        args[0].__class__ is int and
+        args[1].__class__ is int and
+        callable(args[2])
+    ):
         upper, lower, f = args[:3]
         return sum(f(x) for x in range(lower, upper + 1))
     
-    else:
+    elif (
+        args[0].__class__ is Iterable and
+        callable(args[1]) and
+        callable(args[2])
+    ):
         this_set, condition, f = args[:3]
         return sum(f(x) for x in this_set if condition(x))
+    
+    raise ValueError(f"Error when processing sigma overload. {args} does not match any existing overload.")
 
 
 def pi(upper: int, lower: int, f: Callable[[int], SupportsMultT]) -> SupportsMultT:
@@ -99,6 +112,9 @@ def pi(upper: int, lower: int, f: Callable[[int], SupportsMultT]) -> SupportsMul
     Returns:
         SupportsSumT: The completed product.
     """
+    if upper < lower:
+        return 0
+
     return f(upper) if upper == lower else f(upper) * pi(upper - 1, lower, f)
 
 
@@ -137,5 +153,5 @@ def prod(arr: Iterable[T]) -> T:
     Returns:
         float: The product of the numbers.
     """
-    return reduce(lambda x, y: x * y, arr)
+    return reduce(lambda x, y: x * y, arr, 1)
 
