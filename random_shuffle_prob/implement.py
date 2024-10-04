@@ -10,26 +10,11 @@ from itertools import permutations
 from math import ceil, floor, factorial, inf
 from random import random
 from verahelper import cache
-from veramath import linear_invert, prod, sigma
+from veramath import linear_invert, prod, sigma, increment
 
 
 fac = cache(factorial)
 pro = cache(prod)
-
-
-@cache
-def inCr(n: int, k: int) -> int:
-    """1 over ``n`` choose ``k``.
-
-    Args:
-        n (int): Number of items.
-        k (int): Number of items to choose.
-
-    Returns:
-        int: The number of combinations for ``n`` items choose ``k`` raised to the -1 power.
-    """
-    if k > n: return inf
-    return fac(k) * fac(n - k) / fac(n)
 
 
 @cache
@@ -51,23 +36,28 @@ def _elem_symm_poly(arr: tuple[float], deg: int) -> float:
     return sum(arr[i] * _elem_symm_poly(arr[i + 1:], deg - 1) for i in range(len(arr)))
 
 
-def _random_shuffle_solve(arr: list[float], i: int) -> float:
-    arr_without_i = tuple(arr[:i] + arr[i + 1:])
+def _random_shuffle_solve(
+        arr: tuple[float],
+        i: int,
+        base: float,
+        coeff_lookup: dict[frozenset[int], float]
+    ) -> float:
+
     n = len(arr)
     this = arr[i]
-    inv_arrwi = linear_invert(arr_without_i)
+    inv_arrwi = linear_invert(arr[:i] + arr[i + 1:])
 
-    sumfunc = lambda j : inCr(n, j + 1) / (j + 1) * (_elem_symm_poly(inv_arrwi,j) + _elem_symm_poly(inv_arrwi, n - j - 1))
+    init_sum = base * pro(increment(inv_arrwi))
 
-    init_sum = this * sigma(floor(.5 * n) - 1, 0, sumfunc)
+    def sigma_func(j: int) -> float:
+        if coeff_lookup[frozenset({j, n - j - 1})] == 0: return 0
 
-    if n % 2 == 1:
-        return init_sum + this * inCr(n, floor(n/2) + 1) / (ceil(n/2)) * _elem_symm_poly(inv_arrwi, floor(.5 * n))
-    
-    return init_sum
+        return coeff_lookup[frozenset({j, n - j - 1})] * _elem_symm_poly(inv_arrwi, j)
+
+    return this * (init_sum + sigma(n - 1, 0, sigma_func))
 
 
-def random_shuffle_prob(arr: list[float]) -> list[float]:
+def random_shuffle_prob(arr: tuple[float]) -> list[float]:
     """
     Given a list of floats between 0 and 1,\n
     Iterated through with a random value until the value is less than the current value,\n
@@ -80,8 +70,12 @@ def random_shuffle_prob(arr: list[float]) -> list[float]:
         list[float]: The probability of each item in the list.
     """
 
-    # / fac(len(arr))
-    return [_random_shuffle_solve(arr, i)  for i in range(len(arr))]
+    n = len(arr)
+    
+    base = fac(floor((n - 1) / 2)) * fac(ceil((n - 1) / 2))
+    coeff_lookup = {frozenset({x, n - x - 1}): fac(x) * fac(n - x - 1) for x in range(ceil(n / 2))}
+
+    return [_random_shuffle_solve(arr, i, base, coeff_lookup) / fac(len(arr)) for i in range(len(arr))]
 
 
 def _base_solve(arr: tuple[float,...]) -> float:
@@ -111,24 +105,26 @@ def test(this_arr: list[float]) -> list[float]:
 if __name__ == "__main__":
     from time import perf_counter
 
+    TESTING: bool = False # change
+
     _t = perf_counter()
-    this_arr = [random() for _ in range(20)]
+    this_arr = tuple(random() for _ in range(100))
 
     print(f"Running with n = {len(this_arr)}\n")
 
     out = random_shuffle_prob(this_arr)
 
     _t = perf_counter() - _t
-    #_t2 = perf_counter()
+    if TESTING: _t2 = perf_counter()
 
-    #control = test(this_arr)
+    if TESTING: control = test(this_arr)
 
-    #_t2 = perf_counter() - _t2
+    if TESTING: _t2 = perf_counter() - _t2
 
     print(f"Output: {out}")
-    #print(f"Test: {control}")
-    #print(f"Success? {[round(x, 6) for x in out] == [round(x, 6) for x in control]}")
+    if TESTING: print(f"Test: {control}")
+    if TESTING: print(f"Success? {[round(x, 6) for x in out] == [round(x, 6) for x in control]}")
 
     print(f"\nPermutation Sum Runtime: {_t:.6f} seconds")
     print(f"Permutation Sum Hz.: {1/_t:.6f} Hz")
-    #print(f"Test Runtime: {_t2:.6f} seconds")
+    if TESTING: print(f"Test Runtime: {_t2:.6f} seconds")

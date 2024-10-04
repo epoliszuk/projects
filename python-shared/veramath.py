@@ -6,6 +6,7 @@ from functools import reduce
 from typing import TypeVar, overload, TypeAlias
 from collections.abc import Callable, Iterable
 from enum import Enum
+from operator import mul
 
 SupportsSumT = TypeVar('SupportsSumT')
 SupportsMultT = TypeVar('SupportsMultT')
@@ -88,7 +89,8 @@ def sigma(*args):
         callable(args[2])
     ):
         upper, lower, f = args[:3]
-        return sum(f(x) for x in range(lower, upper + 1))
+        #return sum(f(x) for x in range(lower, upper + 1))
+        return sum(map(f, range(lower, upper + 1)))
     
     elif (
         args[0].__class__ is Iterable and
@@ -115,7 +117,7 @@ def pi(upper: int, lower: int, f: Callable[[int], SupportsMultT]) -> SupportsMul
     if upper < lower:
         return 0
 
-    return f(upper) if upper == lower else f(upper) * pi(upper - 1, lower, f)
+    return f(upper) if upper == lower else mul(f(upper), pi(upper - 1, lower, f))
 
 
 def linear_invert(arr: IterableT[T]) -> IterableT[T]:
@@ -144,6 +146,18 @@ def increment(arr: IterableT[T]) -> IterableT[T]:
     return arr.__class__(x + 1 for x in arr)
 
 
+def negate(arr: IterableT[T]) -> IterableT[T]:
+    """Negates each element of an iterable of numbers.
+
+    Args:
+        arr (Iterable[int]): Iterable of numbers to negate.
+
+    Returns:
+        Iterable[float]: Iterable of negated integers.
+    """
+    return arr.__class__(-x for x in arr)
+
+
 def prod(arr: Iterable[T]) -> T:
     """Calculates the product of an iterable of numbers.
 
@@ -153,5 +167,5 @@ def prod(arr: Iterable[T]) -> T:
     Returns:
         float: The product of the numbers.
     """
-    return reduce(lambda x, y: x * y, arr, 1)
+    return reduce(mul, arr, 1)
 

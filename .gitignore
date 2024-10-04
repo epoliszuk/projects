@@ -2,3 +2,7 @@
 __pycache__
 venv
 .env
+
+random_shuffle_prob/benchmark
+random_shuffle_prob/benchmark.py
+random_shuffle_prob/requirements.txt
