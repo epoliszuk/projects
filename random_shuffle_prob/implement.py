@@ -3,7 +3,6 @@
 Important functions:
 - ``random_shuffle_prob`` -> ``list[float]``
 - ``test`` -> ``list[float]``
-- ``inCr`` -> ``int``
 """
 
 from itertools import permutations
